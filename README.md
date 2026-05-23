@@ -1,17 +1,48 @@
 # Homogeneously Coupled Oscillator
 
-An interactive physics visualization of homogeneously coupled oscillators.
+An interactive visualization of homogeneously coupled oscillators created using Claude Artifacts and hosted on GitHub.
+
+---
+
+## Overview
+
+This project demonstrates the behavior of coupled oscillators through an interactive simulation and visualization interface.
+
+The repository was created as part of my beginner journey into:
+- computational physics
+- simulations
+- Git and GitHub
+- interactive scientific visualization
+
+---
 
 ## Features
-- Oscillator visualization
-- Interactive simulation
-- Physics-inspired dynamics
 
-## Built With
+- Interactive oscillator visualization
+- Physics-inspired dynamics
+- Browser-based interface
+- Beginner-friendly computational physics project
+
+---
+
+## Technologies Used
+
 - HTML
 - CSS
 - JavaScript
 - Claude Artifacts
+- GitHub
 
-## Purpose
-This project was created as a beginner exploration of computational physics visualizations and GitHub workflow.
+---
+
+## Project Goal
+
+The purpose of this project is to explore how computational tools and visual simulations can be used to better understand physical systems.
+
+---
+
+## Author
+
+Rutuparna Nayak
+
+GitHub: https://github.com/rutuparna-phy
