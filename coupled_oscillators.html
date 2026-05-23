@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupled Oscillators Amplitude Graph</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        canvas {
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        label {
+            font-size: 0.9em;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+        
+        input[type="range"] {
+            width: 120px;
+            margin: 5px 0;
+        }
+        
+        .value-display {
+            font-size: 0.8em;
+            opacity: 0.8;
+            min-width: 60px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+        
+        button:active {
+            transform: translateY(0px);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+            max-width: 800px;
+            text-align: left;
+        }
+        
+        .physics-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .physics-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Coupled Oscillators Amplitude Analysis</h1>
+        <p class="subtitle">Slow motion amplitude graphs showing energy transfer between equal mass coupled oscillators (m₁ = m₂)</p>
+        
+        <div class="canvas-container">
+            <canvas id="visualCanvas" width="400" height="300"></canvas>
+            <canvas id="graphCanvas" width="1000" height="400"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Coupling Strength (κ)</label>
+                <input type="range" id="coupling" min="0.1" max="3" value="0.8" step="0.1">
+                <span class="value-display" id="couplingValue">0.8</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Natural Frequency (ω₀)</label>
+                <input type="range" id="frequency" min="0.5" max="3" value="1.5" step="0.1">
+                <span class="value-display" id="frequencyValue">1.5 Hz</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Time Scale</label>
+                <input type="range" id="timeScale" min="0.1" max="5" value="1.5" step="0.1">
+                <span class="value-display" id="timeScaleValue">0.3x</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Initial Amplitude</label>
+                <input type="range" id="amplitude" min="20" max="100" value="80" step="10">
+                <span class="value-display" id="amplitudeValue">80</span>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="resetBtn">Reset</button>
+            <button id="pauseBtn">Pause</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff6b6b;"></div>
+                <span>Mass 1 Amplitude</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ecdc4;"></div>
+                <span>Mass 2 Amplitude</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #45b7d1;"></div>
+                <span>Total Energy</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffd93d;"></div>
+                <span>Beat Envelope</span>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h3>Physics of Homogeneously Coupled Oscillators (Equal Masses)</h3>
+            <div class="physics-info">
+                <div>
+                    <h4>Normal Modes:</h4>
+                    <p><strong>Symmetric Mode:</strong> Both masses oscillate in phase<br>
+                    Frequency: ω₀ (m₁ = m₂)</p>
+                    <p><strong>Antisymmetric Mode:</strong> Masses oscillate out of phase<br>
+                    Frequency: √(ω₀² + 2κ/m) where m₁ = m₂ = m</p>
+                </div>
+                <div>
+                    <h4>Beat Phenomenon:</h4>
+                    <p><strong>Beat Frequency:</strong> Δω = √(ω₀² + 2κ/m) - ω₀</p>
+                    <p><strong>Energy Exchange Period:</strong> T = 2π/Δω</p>
+                    <p>Energy oscillates completely between equal masses</p>
+                </div>
+            </div>
+            <p><strong>Key Observation:</strong> With equal masses (m₁ = m₂), the system exhibits perfect energy transfer. When one oscillator starts with maximum amplitude and the other at rest, energy completely transfers back and forth - a hallmark of symmetric coupled oscillator systems.</p>
+        </div>
+    </div>
+
+    <script>
+        const visualCanvas = document.getElementById('visualCanvas');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const visualCtx = visualCanvas.getContext('2d');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        // Animation parameters
+        let time = 0;
+        let animationId;
+        let isPaused = false;
+        
+        // Physics parameters (homogeneous coupling)
+        let coupling = 0.8;    // κ
+        let omega0 = 1.5;      // ω₀ - natural frequency
+        let timeScale = 1.5;   // faster default speed
+        let initialAmp = 80;   // initial amplitude
+        
+        // Data storage
+        const timeData = [];
+        const amp1Data = [];
+        const amp2Data = [];
+        const energyData = [];
+        const beatData = [];
+        const maxDataPoints = 2000;
+        
+        // Visual parameters
+        const centerX = visualCanvas.width / 2;
+        const centerY = visualCanvas.height / 2;
+        const massSize = 15;
+        
+        // Control elements
+        const couplingSlider = document.getElementById('coupling');
+        const frequencySlider = document.getElementById('frequency');
+        const timeScaleSlider = document.getElementById('timeScale');
+        const amplitudeSlider = document.getElementById('amplitude');
+        const resetBtn = document.getElementById('resetBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        // Calculate normal mode frequencies
+        function calculateModes() {
+            const omega1 = omega0; // Symmetric mode
+            const omega2 = Math.sqrt(omega0*omega0 + 2*coupling); // Antisymmetric mode
+            return { omega1, omega2 };
+        }
+        
+        // Calculate amplitudes for homogeneous coupling
+        function calculateAmplitudes(t) {
+            const { omega1, omega2 } = calculateModes();
+            const omegaAvg = (omega1 + omega2) / 2;
+            const deltaOmega = (omega2 - omega1) / 2;
+            
+            // For initial conditions: x1(0) = A, x2(0) = 0, v1(0) = 0, v2(0) = 0
+            const A = initialAmp;
+            const envelope = Math.cos(deltaOmega * t);
+            const carrier = Math.cos(omegaAvg * t);
+            
+            const x1 = A * envelope * carrier;
+            const x2 = A * Math.sin(deltaOmega * t) * Math.sin(omegaAvg * t);
+            
+            return { x1, x2, envelope: Math.abs(envelope) };
+        }
+        
+        // Update display values
+        function updateControls() {
+            document.getElementById('couplingValue').textContent = coupling.toFixed(1);
+            document.getElementById('frequencyValue').textContent = omega0.toFixed(1) + ' Hz';
+            document.getElementById('timeScaleValue').textContent = timeScale.toFixed(1) + 'x';
+            document.getElementById('amplitudeValue').textContent = initialAmp.toString();
+        }
+        
+        // Event listeners
+        couplingSlider.addEventListener('input', (e) => {
+            coupling = parseFloat(e.target.value);
+            updateControls();
+        });
+        
+        frequencySlider.addEventListener('input', (e) => {
+            omega0 = parseFloat(e.target.value);
+            updateControls();
+        });
+        
+        timeScaleSlider.addEventListener('input', (e) => {
+            timeScale = parseFloat(e.target.value);
+            updateControls();
+        });
+        
+        amplitudeSlider.addEventListener('input', (e) => {
+            initialAmp = parseFloat(e.target.value);
+            updateControls();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            time = 0;
+            timeData.length = 0;
+            amp1Data.length = 0;
+            amp2Data.length = 0;
+            energyData.length = 0;
+            beatData.length = 0;
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+            if (!isPaused) animate();
+        });
+        
+        // Draw visual representation
+        function drawVisual(x1, x2) {
+            visualCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            visualCtx.fillRect(0, 0, visualCanvas.width, visualCanvas.height);
+            
+            // Draw reference lines
+            visualCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+            visualCtx.setLineDash([5, 5]);
+            visualCtx.beginPath();
+            visualCtx.moveTo(50, centerY);
+            visualCtx.lineTo(visualCanvas.width - 50, centerY);
+            visualCtx.stroke();
+            visualCtx.setLineDash([]);
+            
+            // Calculate positions
+            const pos1X = centerX - 80 + x1 * 0.8;
+            const pos1Y = centerY - 40;
+            const pos2X = centerX + 80 + x2 * 0.8;
+            const pos2Y = centerY + 40;
+            
+            // Draw coupling spring
+            visualCtx.strokeStyle = '#45b7d1';
+            visualCtx.lineWidth = 3;
+            drawSpring(pos1X, pos1Y, pos2X, pos2Y);
+            
+            // Draw masses (equal size to represent equal mass)
+            visualCtx.fillStyle = '#ff6b6b';
+            visualCtx.beginPath();
+            visualCtx.arc(pos1X, pos1Y, massSize, 0, 2*Math.PI);
+            visualCtx.fill();
+            visualCtx.strokeStyle = '#fff';
+            visualCtx.lineWidth = 2;
+            visualCtx.stroke();
+            
+            visualCtx.fillStyle = '#4ecdc4';
+            visualCtx.beginPath();
+            visualCtx.arc(pos2X, pos2Y, massSize, 0, 2*Math.PI);  // Same size as mass 1
+            visualCtx.fill();
+            visualCtx.stroke();
+            
+            // Draw labels
+            visualCtx.fillStyle = '#fff';
+            visualCtx.font = '14px Arial';
+            visualCtx.textAlign = 'center';
+            visualCtx.fillText('Mass 1 (m)', pos1X, pos1Y - 25);
+            visualCtx.fillText('Mass 2 (m)', pos2X, pos2Y - 25);
+            visualCtx.fillText(`x₁ = ${x1.toFixed(1)}`, pos1X, pos1Y + 35);
+            visualCtx.fillText(`x₂ = ${x2.toFixed(1)}`, pos2X, pos2Y + 35);
+            
+            // Display mode information
+            const { omega1, omega2 } = calculateModes();
+            visualCtx.textAlign = 'left';
+            visualCtx.font = '12px Arial';
+            visualCtx.fillText(`ω₁ = ${omega1.toFixed(2)} (symmetric)`, 10, 20);
+            visualCtx.fillText(`ω₂ = ${omega2.toFixed(2)} (antisymmetric)`, 10, 35);
+            visualCtx.fillText(`Δω = ${(omega2-omega1).toFixed(3)}`, 10, 50);
+        }
+        
+        // Draw spring helper function
+        function drawSpring(x1, y1, x2, y2, coils = 6) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx*dx + dy*dy);
+            const unitX = dx / length;
+            const unitY = dy / length;
+            const perpX = -unitY;
+            const perpY = unitX;
+            
+            visualCtx.beginPath();
+            visualCtx.moveTo(x1, y1);
+            
+            for (let i = 0; i <= coils * 2; i++) {
+                const t = i / (coils * 2);
+                const springX = x1 + t * dx;
+                const springY = y1 + t * dy;
+                const offset = Math.sin(i * Math.PI) * 8;
+                visualCtx.lineTo(springX + offset * perpX, springY + offset * perpY);
+            }
+            
+            visualCtx.lineTo(x2, y2);
+            visualCtx.stroke();
+        }
+        
+        // Draw graph
+        function drawGraph() {
+            graphCtx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            graphCtx.fillRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            if (timeData.length < 2) return;
+            
+            const margin = 60;
+            const graphWidth = graphCanvas.width - 2 * margin;
+            const graphHeight = graphCanvas.height - 2 * margin;
+            const maxTime = Math.max(...timeData);
+            const maxAmp = Math.max(initialAmp, Math.max(...amp1Data.map(Math.abs)), Math.max(...amp2Data.map(Math.abs)));
+            
+            // Draw grid
+            graphCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+            graphCtx.lineWidth = 1;
+            
+            // Vertical grid lines (time)
+            for (let i = 0; i <= 10; i++) {
+                const x = margin + (i / 10) * graphWidth;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, margin);
+                graphCtx.lineTo(x, margin + graphHeight);
+                graphCtx.stroke();
+            }
+            
+            // Horizontal grid lines (amplitude)
+            for (let i = 0; i <= 8; i++) {
+                const y = margin + (i / 8) * graphHeight;
+                graphCtx.beginPath();
+                graphCtx.moveTo(margin, y);
+                graphCtx.lineTo(margin + graphWidth, y);
+                graphCtx.stroke();
+            }
+            
+            // Draw axes
+            graphCtx.strokeStyle = '#fff';
+            graphCtx.lineWidth = 2;
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin, margin + graphHeight/2);
+            graphCtx.lineTo(margin + graphWidth, margin + graphHeight/2);
+            graphCtx.moveTo(margin, margin);
+            graphCtx.lineTo(margin, margin + graphHeight);
+            graphCtx.stroke();
+            
+            // Draw amplitude curves
+            function drawCurve(data, color, lineWidth = 2) {
+                if (data.length < 2) return;
+                
+                graphCtx.strokeStyle = color;
+                graphCtx.lineWidth = lineWidth;
+                graphCtx.beginPath();
+                
+                for (let i = 0; i < data.length; i++) {
+                    const x = margin + (timeData[i] / maxTime) * graphWidth;
+                    const y = margin + graphHeight/2 - (data[i] / maxAmp) * (graphHeight/2 * 0.9);
+                    
+                    if (i === 0) {
+                        graphCtx.moveTo(x, y);
+                    } else {
+                        graphCtx.lineTo(x, y);
+                    }
+                }
+                graphCtx.stroke();
+            }
+            
+            // Draw beat envelope
+            drawCurve(beatData.map(x => x * maxAmp), '#ffd93d', 1);
+            drawCurve(beatData.map(x => -x * maxAmp), '#ffd93d', 1);
+            
+            // Draw amplitude curves
+            drawCurve(amp1Data, '#ff6b6b', 3);
+            drawCurve(amp2Data, '#4ecdc4', 3);
+            
+            // Draw energy curve (scaled)
+            const energyScale = maxAmp / Math.max(...energyData);
+            drawCurve(energyData.map(e => e * energyScale), '#45b7d1', 2);
+            
+            // Labels
+            graphCtx.fillStyle = '#fff';
+            graphCtx.font = '14px Arial';
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('Time (s)', margin + graphWidth/2, graphCanvas.height - 10);
+            
+            graphCtx.save();
+            graphCtx.translate(15, margin + graphHeight/2);
+            graphCtx.rotate(-Math.PI/2);
+            graphCtx.fillText('Amplitude', 0, 0);
+            graphCtx.restore();
+            
+            // Scale labels
+            graphCtx.font = '12px Arial';
+            graphCtx.textAlign = 'right';
+            graphCtx.fillText(maxAmp.toFixed(0), margin - 10, margin + 5);
+            graphCtx.fillText('0', margin - 10, margin + graphHeight/2 + 5);
+            graphCtx.fillText((-maxAmp).toFixed(0), margin - 10, margin + graphHeight - 5);
+            
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('0', margin, margin + graphHeight + 20);
+            graphCtx.fillText(maxTime.toFixed(1), margin + graphWidth, margin + graphHeight + 20);
+            
+            // Current time indicator
+            if (maxTime > 0) {
+                const currentX = margin + (time / maxTime) * graphWidth;
+                graphCtx.strokeStyle = '#ffeb3b';
+                graphCtx.lineWidth = 2;
+                graphCtx.setLineDash([5, 5]);
+                graphCtx.beginPath();
+                graphCtx.moveTo(currentX, margin);
+                graphCtx.lineTo(currentX, margin + graphHeight);
+                graphCtx.stroke();
+                graphCtx.setLineDash([]);
+            }
+        }
+        
+        // Main animation loop
+        function animate() {
+            if (isPaused) return;
+            
+            const dt = 0.016 * timeScale; // ~60fps with time scaling
+            time += dt;
+            
+            // Calculate current amplitudes
+            const { x1, x2, envelope } = calculateAmplitudes(time);
+            const totalEnergy = (x1*x1 + x2*x2) / 2; // Simplified energy calculation
+            
+            // Store data
+            timeData.push(time);
+            amp1Data.push(x1);
+            amp2Data.push(x2);
+            energyData.push(totalEnergy);
+            beatData.push(envelope);
+            
+            // Limit data points
+            if (timeData.length > maxDataPoints) {
+                timeData.shift();
+                amp1Data.shift();
+                amp2Data.shift();
+                energyData.shift();
+                beatData.shift();
+            }
+            
+            // Draw visual and graph
+            drawVisual(x1, x2);
+            drawGraph();
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Initialize
+        updateControls();
+        animate();
+    </script>
+</body>
+</html>
