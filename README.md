@@ -24,7 +24,11 @@ The repository was created as part of my beginner journey into:
 - Beginner-friendly computational physics project
 
 ---
+## Live Demo
 
+[View Interactive Simulation](https://claude.ai/public/artifacts/ce031e59-4d7e-477a-a4b0-a5c8e3bd68c0)
+
+---
 ## Technologies Used
 
 - HTML
