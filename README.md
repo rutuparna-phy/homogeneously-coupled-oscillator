@@ -4,7 +4,7 @@
 =======
 ![Coupled Oscillator Demo](media/coupled-oscillator-1.gif)
 
->>>>>>> deb2f9f (Restore local oscillator project after repository cleanup)
+
 An interactive visualization of homogeneously coupled oscillators created using Claude Artifacts and hosted on GitHub.
 
 ---
